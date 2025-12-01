@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Auto SMS Perú</string>
+    <string name="phone_number_hint">Número de teléfono (9 dígitos)</string>
+    <string name="send_sms_button">Enviar SMS</string>
+    <string name="permission_denied">Se necesita permiso para enviar SMS</string>
+    <string name="sms_sent">SMS enviado correctamente</string>
+    <string name="sms_failed">Error al enviar SMS</string>
+    <string name="invalid_phone">Por favor ingrese un número válido (9 dígitos)</string>
+    <string name="title">Envío Automático de SMS</string>
+    <string name="subtitle">Ingrese el número y presione enviar</string>
+</resources>
