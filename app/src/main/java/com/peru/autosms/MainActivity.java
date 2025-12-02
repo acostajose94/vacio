@@ -8,10 +8,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.telephony.SmsManager;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,10 +28,14 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity {
 
     private static final int SMS_PERMISSION_CODE = 100;
+    private static final long SMS_INTERVAL = 60000; // 60 segundos en milisegundos
+
     private TextInputEditText phoneInput;
-    private MaterialButton sendSmsButton;
+    private MaterialButton startAutoSmsButton;
+    private MaterialButton stopAutoSmsButton;
     private TextView statusText;
     private TextView messagesPreview;
+    private TextView timerText;
 
     // 5 frases personalizadas para Perú
     private final String[] messages = {
@@ -42,24 +46,33 @@ public class MainActivity extends AppCompatActivity {
             "¡Hola! Solo un mensaje para recordarte que eres increíble. ¡Que tengas un gran día!"
     };
 
-    private String sentToNumber = "";
-    private String sentMessage = "";
+    private Handler handler;
+    private Runnable smsRunnable;
+    private Runnable timerRunnable;
+    private boolean isAutoSmsRunning = false;
+    private int messagesSent = 0;
+    private int secondsRemaining = 60;
+    private String currentPhoneNumber = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        handler = new Handler(Looper.getMainLooper());
+
         initViews();
         displayAvailableMessages();
-        setupSendButton();
+        setupButtons();
     }
 
     private void initViews() {
         phoneInput = findViewById(R.id.phoneInput);
-        sendSmsButton = findViewById(R.id.sendSmsButton);
+        startAutoSmsButton = findViewById(R.id.startAutoSmsButton);
+        stopAutoSmsButton = findViewById(R.id.stopAutoSmsButton);
         statusText = findViewById(R.id.statusText);
         messagesPreview = findViewById(R.id.messagesPreview);
+        timerText = findViewById(R.id.timerText);
     }
 
     private void displayAvailableMessages() {
@@ -70,15 +83,15 @@ public class MainActivity extends AppCompatActivity {
         messagesPreview.setText(preview.toString());
     }
 
-    private void setupSendButton() {
-        sendSmsButton.setOnClickListener(new View.OnClickListener() {
+    private void setupButtons() {
+        startAutoSmsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String phoneNumber = phoneInput.getText().toString().trim();
 
                 if (validatePhoneNumber(phoneNumber)) {
                     if (checkSmsPermission()) {
-                        sendRandomSms(phoneNumber);
+                        startAutoSms(phoneNumber);
                     } else {
                         requestSmsPermission();
                     }
@@ -89,6 +102,112 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        stopAutoSmsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopAutoSms();
+            }
+        });
+    }
+
+    private void startAutoSms(String phoneNumber) {
+        if (isAutoSmsRunning) {
+            return;
+        }
+
+        currentPhoneNumber = phoneNumber;
+        isAutoSmsRunning = true;
+        messagesSent = 0;
+        secondsRemaining = 60;
+
+        // Actualizar UI
+        startAutoSmsButton.setEnabled(false);
+        stopAutoSmsButton.setEnabled(true);
+        phoneInput.setEnabled(false);
+
+        // Enviar el primer SMS inmediatamente
+        sendRandomSms(currentPhoneNumber);
+        messagesSent++;
+
+        // Configurar envío automático cada minuto
+        smsRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isAutoSmsRunning) {
+                    sendRandomSms(currentPhoneNumber);
+                    messagesSent++;
+                    secondsRemaining = 60;
+                    handler.postDelayed(this, SMS_INTERVAL);
+                }
+            }
+        };
+        handler.postDelayed(smsRunnable, SMS_INTERVAL);
+
+        // Configurar contador de tiempo
+        secondsRemaining = 60;
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isAutoSmsRunning && secondsRemaining > 0) {
+                    secondsRemaining--;
+                    updateTimerDisplay();
+                    handler.postDelayed(this, 1000);
+                } else if (isAutoSmsRunning) {
+                    secondsRemaining = 60;
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        };
+        handler.post(timerRunnable);
+
+        Toast.makeText(this, R.string.auto_sms_running, Toast.LENGTH_SHORT).show();
+    }
+
+    private void stopAutoSms() {
+        if (!isAutoSmsRunning) {
+            return;
+        }
+
+        isAutoSmsRunning = false;
+
+        // Cancelar todos los handlers
+        if (handler != null) {
+            if (smsRunnable != null) {
+                handler.removeCallbacks(smsRunnable);
+            }
+            if (timerRunnable != null) {
+                handler.removeCallbacks(timerRunnable);
+            }
+        }
+
+        // Actualizar UI
+        startAutoSmsButton.setEnabled(true);
+        stopAutoSmsButton.setEnabled(false);
+        phoneInput.setEnabled(true);
+
+        timerText.setText(R.string.auto_sms_stopped);
+        timerText.setTextColor(getResources().getColor(R.color.red));
+
+        String stoppedMsg = "⏹️ Envío automático detenido\n" +
+                "Total de mensajes enviados: " + messagesSent + "\n" +
+                "Número: " + currentPhoneNumber;
+        statusText.setText(stoppedMsg);
+        statusText.setTextColor(getResources().getColor(R.color.purple_700));
+
+        Toast.makeText(this, R.string.auto_sms_stopped, Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateTimerDisplay() {
+        String timerMsg = "⏱️ Próximo SMS en: " + secondsRemaining + " segundos";
+        timerText.setText(timerMsg);
+        timerText.setTextColor(getResources().getColor(R.color.green));
+
+        String statusMsg = "🔄 Envío automático activo\n" +
+                "Mensajes enviados: " + messagesSent + "\n" +
+                "Destinatario: " + currentPhoneNumber;
+        statusText.setText(statusMsg);
+        statusText.setTextColor(getResources().getColor(R.color.purple_700));
     }
 
     private boolean validatePhoneNumber(String phoneNumber) {
@@ -114,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == SMS_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permiso concedido. Por favor, intente enviar de nuevo.",
+                Toast.makeText(this, "Permiso concedido. Por favor, intente iniciar de nuevo.",
                         Toast.LENGTH_SHORT).show();
             } else {
                 statusText.setText(R.string.permission_denied);
@@ -130,44 +249,53 @@ public class MainActivity extends AppCompatActivity {
         int randomIndex = random.nextInt(messages.length);
         String selectedMessage = messages[randomIndex];
 
-        sentToNumber = phoneNumber;
-        sentMessage = selectedMessage;
-
         try {
             // Registrar receptores para saber si el SMS fue enviado y entregado
-            String SENT = "SMS_SENT";
-            String DELIVERED = "SMS_DELIVERED";
+            String SENT = "SMS_SENT_" + System.currentTimeMillis();
+            String DELIVERED = "SMS_DELIVERED_" + System.currentTimeMillis();
 
             PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
                     new Intent(SENT), PendingIntent.FLAG_IMMUTABLE);
             PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
                     new Intent(DELIVERED), PendingIntent.FLAG_IMMUTABLE);
 
+            final String finalMessage = selectedMessage;
+            final int finalIndex = randomIndex;
+
             registerReceiver(new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
+                    String result = "";
                     switch (getResultCode()) {
                         case RESULT_OK:
-                            String successMsg = "✓ SMS enviado correctamente\n" +
-                                    "Número: " + sentToNumber + "\n" +
-                                    "Mensaje: \"" + sentMessage + "\"";
-                            statusText.setText(successMsg);
-                            statusText.setTextColor(getResources().getColor(R.color.green));
-                            Toast.makeText(MainActivity.this, R.string.sms_sent,
-                                    Toast.LENGTH_LONG).show();
+                            result = "✓ SMS #" + messagesSent + " enviado correctamente";
                             break;
                         case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                            showError("Error genérico al enviar");
+                            result = "✗ Error genérico al enviar SMS #" + messagesSent;
                             break;
                         case SmsManager.RESULT_ERROR_NO_SERVICE:
-                            showError("Sin servicio");
+                            result = "✗ Sin servicio - SMS #" + messagesSent;
                             break;
                         case SmsManager.RESULT_ERROR_NULL_PDU:
-                            showError("Error PDU nulo");
+                            result = "✗ Error PDU nulo - SMS #" + messagesSent;
                             break;
                         case SmsManager.RESULT_ERROR_RADIO_OFF:
-                            showError("Radio apagada");
+                            result = "✗ Radio apagada - SMS #" + messagesSent;
                             break;
+                    }
+
+                    if (isAutoSmsRunning) {
+                        String statusMsg = "🔄 Envío automático activo\n" +
+                                result + "\n" +
+                                "Mensaje (#" + (finalIndex + 1) + "): \"" + finalMessage + "\"";
+                        statusText.setText(statusMsg);
+                    }
+
+                    // Desregistrar el receptor
+                    try {
+                        unregisterReceiver(this);
+                    } catch (Exception e) {
+                        // Ignorar si ya fue desregistrado
                     }
                 }
             }, new IntentFilter(SENT), Context.RECEIVER_NOT_EXPORTED);
@@ -175,15 +303,11 @@ public class MainActivity extends AppCompatActivity {
             registerReceiver(new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    switch (getResultCode()) {
-                        case RESULT_OK:
-                            Toast.makeText(MainActivity.this, "SMS entregado",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
-                        case RESULT_CANCELED:
-                            Toast.makeText(MainActivity.this, "SMS no entregado",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
+                    // Desregistrar el receptor
+                    try {
+                        unregisterReceiver(this);
+                    } catch (Exception e) {
+                        // Ignorar si ya fue desregistrado
                     }
                 }
             }, new IntentFilter(DELIVERED), Context.RECEIVER_NOT_EXPORTED);
@@ -192,23 +316,23 @@ public class MainActivity extends AppCompatActivity {
             SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage(phoneNumber, null, selectedMessage, sentPI, deliveredPI);
 
-            // Mostrar información inmediata
-            String sendingMsg = "📤 Enviando SMS...\n" +
-                    "Número: " + phoneNumber + "\n" +
-                    "Mensaje seleccionado (#" + (randomIndex + 1) + "):\n\"" + selectedMessage + "\"";
-            statusText.setText(sendingMsg);
-            statusText.setTextColor(getResources().getColor(R.color.purple_700));
-
         } catch (Exception e) {
-            showError("Error: " + e.getMessage());
+            Toast.makeText(this, "Error al enviar SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void showError(String error) {
-        String errorMsg = "✗ " + error + "\n" +
-                "Número: " + sentToNumber;
-        statusText.setText(errorMsg);
-        statusText.setTextColor(getResources().getColor(R.color.red));
-        Toast.makeText(this, R.string.sms_failed + ": " + error, Toast.LENGTH_LONG).show();
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Detener envío automático al destruir la actividad
+        stopAutoSms();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Nota: El envío automático continuará en background
+        // Si quieres detenerlo cuando la app va a background, descomenta la siguiente línea:
+        // stopAutoSms();
     }
 }

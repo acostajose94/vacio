@@ -1,15 +1,18 @@
 # Auto SMS Perú 🇵🇪
 
-Aplicación Android para enviar SMS automáticos con frases personalizadas al hacer click. Diseñada específicamente para números de teléfono peruanos.
+Aplicación Android para enviar SMS automáticos con frases personalizadas **cada 60 segundos**. Diseñada específicamente para números de teléfono peruanos.
 
 ## 📱 Características
 
-- **Envío automático de SMS** con solo un click
+- **Envío automático periódico** de SMS cada minuto
+- **Botones de control**: Iniciar y detener envío automático
+- **Contador en tiempo real**: Muestra segundos restantes hasta el próximo SMS
 - **5 frases personalizadas** predefinidas
-- Selección **aleatoria** de mensajes
+- Selección **aleatoria** de mensajes en cada envío
+- **Estadísticas en vivo**: Contador de mensajes enviados
 - Validación de números peruanos (9 dígitos, inicia con 9)
 - Solicitud de permisos en tiempo de ejecución
-- Confirmación de envío y entrega
+- Confirmación de envío y entrega para cada SMS
 - Interfaz moderna con Material Design
 
 ## 🎯 Frases Disponibles
@@ -84,10 +87,24 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 1. **Abrir la aplicación** en tu dispositivo Android
 2. La aplicación mostrará las 5 frases disponibles
 3. **Ingresar el número de teléfono** destinatario (9 dígitos, debe empezar con 9)
-4. **Hacer click en "Enviar SMS"**
+4. **Hacer click en "▶️ Iniciar Envío Automático"**
 5. Si es la primera vez, **conceder permisos** de envío de SMS
-6. La aplicación seleccionará automáticamente una frase aleatoria y enviará el SMS
-7. Verás el estado del envío en pantalla
+6. La aplicación comenzará a enviar SMS automáticamente:
+   - **Primer SMS**: Se envía inmediatamente
+   - **SMS siguientes**: Cada 60 segundos
+   - **Contador**: Muestra los segundos restantes hasta el próximo envío
+   - **Estadísticas**: Muestra la cantidad de mensajes enviados
+7. **Para detener**: Click en "⏹️ Detener Envío" en cualquier momento
+8. Cada SMS usa una **frase aleatoria diferente** de las 5 disponibles
+
+### 📊 Pantalla de Envío Activo
+
+Mientras el envío automático está activo, verás:
+- ⏱️ **Temporizador**: Cuenta regresiva hasta el próximo SMS
+- 📈 **Mensajes enviados**: Contador total de SMS enviados
+- 📱 **Número destinatario**: Número al que se están enviando los SMS
+- ✅ **Estado del último SMS**: Confirmación de envío exitoso o error
+- 📝 **Mensaje enviado**: La frase que se envió en el último SMS
 
 ## ⚙️ Estructura del Proyecto
 
@@ -137,6 +154,18 @@ private final String[] messages = {
 };
 ```
 
+### Cambiar el intervalo de envío
+
+Para modificar el tiempo entre SMS (por defecto 60 segundos), edita la constante `SMS_INTERVAL` en `MainActivity.java`:
+
+```java
+private static final long SMS_INTERVAL = 60000; // 60 segundos en milisegundos
+// Ejemplos:
+// 30 segundos: 30000
+// 2 minutos: 120000
+// 5 minutos: 300000
+```
+
 ### Cambiar la validación de número
 
 Si necesitas usar la app en otro país, modifica el método `validatePhoneNumber()` en `MainActivity.java`:
@@ -152,8 +181,10 @@ private boolean validatePhoneNumber(String phoneNumber) {
 
 1. **Solo funciona en dispositivos reales**: Los emuladores no pueden enviar SMS reales
 2. **Requiere SIM card activa**: El dispositivo debe tener una SIM card con saldo/plan
-3. **Costo de SMS**: Cada envío consume un SMS de tu plan telefónico
+3. **Costo de SMS**: Cada envío consume un SMS de tu plan telefónico. Con envío cada minuto, ¡son 60 SMS por hora!
 4. **Números peruanos**: La validación actual solo acepta números de 9 dígitos que empiecen con 9
+5. **Mantener la app abierta**: Para que el envío automático funcione, mantén la aplicación en primer plano
+6. **Batería**: El envío continuo puede consumir batería significativamente
 
 ## 🐛 Solución de Problemas
 
@@ -161,6 +192,16 @@ private boolean validatePhoneNumber(String phoneNumber) {
 - Verifica que concediste los permisos de SMS
 - Asegúrate de tener señal y saldo/plan activo
 - Comprueba que el número sea válido (9 dígitos, empieza con 9)
+- Verifica que tienes suficiente saldo para SMS
+
+### El envío automático se detiene
+- Mantén la aplicación en primer plano (no la minimices)
+- Desactiva optimizaciones de batería para esta app
+- Verifica que no se agotó el saldo de SMS
+
+### El temporizador no se actualiza
+- La app debe estar visible en pantalla
+- Si el teléfono entra en modo de ahorro de energía, puede pausarse
 
 ### Error de compilación
 - Ejecuta: `./gradlew clean build`
