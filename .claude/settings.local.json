@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gradlew.bat:*)",
+      "Bash(chmod +x \"D:\\proy\\vacio\\gradlew\")",
+      "Bash(curl:*)",
+      "Bash(./gradlew:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

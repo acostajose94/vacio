@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.View;
@@ -84,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     statusText.setText(R.string.invalid_phone);
-                    statusText.setTextColor(getResources().getColor(R.color.red));
+                    statusText.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.red));
                     Toast.makeText(MainActivity.this, R.string.invalid_phone, Toast.LENGTH_SHORT).show();
                 }
             }
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             } else {
                 statusText.setText(R.string.permission_denied);
-                statusText.setTextColor(getResources().getColor(R.color.red));
+                statusText.setTextColor(ContextCompat.getColor(this, R.color.red));
                 Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_LONG).show();
             }
         }
@@ -143,50 +144,99 @@ public class MainActivity extends AppCompatActivity {
             PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
                     new Intent(DELIVERED), PendingIntent.FLAG_IMMUTABLE);
 
-            registerReceiver(new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    switch (getResultCode()) {
-                        case RESULT_OK:
-                            String successMsg = "✓ SMS enviado correctamente\n" +
-                                    "Número: " + sentToNumber + "\n" +
-                                    "Mensaje: \"" + sentMessage + "\"";
-                            statusText.setText(successMsg);
-                            statusText.setTextColor(getResources().getColor(R.color.green));
-                            Toast.makeText(MainActivity.this, R.string.sms_sent,
-                                    Toast.LENGTH_LONG).show();
-                            break;
-                        case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                            showError("Error genérico al enviar");
-                            break;
-                        case SmsManager.RESULT_ERROR_NO_SERVICE:
-                            showError("Sin servicio");
-                            break;
-                        case SmsManager.RESULT_ERROR_NULL_PDU:
-                            showError("Error PDU nulo");
-                            break;
-                        case SmsManager.RESULT_ERROR_RADIO_OFF:
-                            showError("Radio apagada");
-                            break;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                registerReceiver(new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        switch (getResultCode()) {
+                            case RESULT_OK:
+                                String successMsg = "✓ SMS enviado correctamente\n" +
+                                        "Número: " + sentToNumber + "\n" +
+                                        "Mensaje: \"" + sentMessage + "\"";
+                                statusText.setText(successMsg);
+                                statusText.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.green));
+                                Toast.makeText(MainActivity.this, R.string.sms_sent,
+                                        Toast.LENGTH_LONG).show();
+                                break;
+                            case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                                showError("Error genérico al enviar");
+                                break;
+                            case SmsManager.RESULT_ERROR_NO_SERVICE:
+                                showError("Sin servicio");
+                                break;
+                            case SmsManager.RESULT_ERROR_NULL_PDU:
+                                showError("Error PDU nulo");
+                                break;
+                            case SmsManager.RESULT_ERROR_RADIO_OFF:
+                                showError("Radio apagada");
+                                break;
+                        }
                     }
-                }
-            }, new IntentFilter(SENT), Context.RECEIVER_NOT_EXPORTED);
+                }, new IntentFilter(SENT), Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        switch (getResultCode()) {
+                            case RESULT_OK:
+                                String successMsg = "✓ SMS enviado correctamente\n" +
+                                        "Número: " + sentToNumber + "\n" +
+                                        "Mensaje: \"" + sentMessage + "\"";
+                                statusText.setText(successMsg);
+                                statusText.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.green));
+                                Toast.makeText(MainActivity.this, R.string.sms_sent,
+                                        Toast.LENGTH_LONG).show();
+                                break;
+                            case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                                showError("Error genérico al enviar");
+                                break;
+                            case SmsManager.RESULT_ERROR_NO_SERVICE:
+                                showError("Sin servicio");
+                                break;
+                            case SmsManager.RESULT_ERROR_NULL_PDU:
+                                showError("Error PDU nulo");
+                                break;
+                            case SmsManager.RESULT_ERROR_RADIO_OFF:
+                                showError("Radio apagada");
+                                break;
+                        }
+                    }
+                }, new IntentFilter(SENT));
+            }
 
-            registerReceiver(new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    switch (getResultCode()) {
-                        case RESULT_OK:
-                            Toast.makeText(MainActivity.this, "SMS entregado",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
-                        case RESULT_CANCELED:
-                            Toast.makeText(MainActivity.this, "SMS no entregado",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                registerReceiver(new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        switch (getResultCode()) {
+                            case RESULT_OK:
+                                Toast.makeText(MainActivity.this, "SMS entregado",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case RESULT_CANCELED:
+                                Toast.makeText(MainActivity.this, "SMS no entregado",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                        }
                     }
-                }
-            }, new IntentFilter(DELIVERED), Context.RECEIVER_NOT_EXPORTED);
+                }, new IntentFilter(DELIVERED), Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        switch (getResultCode()) {
+                            case RESULT_OK:
+                                Toast.makeText(MainActivity.this, "SMS entregado",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case RESULT_CANCELED:
+                                Toast.makeText(MainActivity.this, "SMS no entregado",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                    }
+                }, new IntentFilter(DELIVERED));
+            }
 
             // Enviar el SMS
             SmsManager smsManager = SmsManager.getDefault();
@@ -197,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
                     "Número: " + phoneNumber + "\n" +
                     "Mensaje seleccionado (#" + (randomIndex + 1) + "):\n\"" + selectedMessage + "\"";
             statusText.setText(sendingMsg);
-            statusText.setTextColor(getResources().getColor(R.color.purple_700));
+            statusText.setTextColor(ContextCompat.getColor(this, R.color.purple_700));
 
         } catch (Exception e) {
             showError("Error: " + e.getMessage());
@@ -208,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
         String errorMsg = "✗ " + error + "\n" +
                 "Número: " + sentToNumber;
         statusText.setText(errorMsg);
-        statusText.setTextColor(getResources().getColor(R.color.red));
+        statusText.setTextColor(ContextCompat.getColor(this, R.color.red));
         Toast.makeText(this, R.string.sms_failed + ": " + error, Toast.LENGTH_LONG).show();
     }
 }
