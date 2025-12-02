@@ -53,6 +53,28 @@
             android:textSize="18sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/intervalInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/repeat_interval_hint"
+        app:layout_constraintTop_toBottomOf="@id/phoneInputLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        app:boxStrokeColor="@color/purple_500"
+        app:hintTextColor="@color/purple_500"
+        app:suffixText="seg">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/intervalInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:text="10"
+            android:textSize="18sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/sendSmsButton"
         android:layout_width="0dp"
@@ -60,11 +82,42 @@
         android:text="@string/send_sms_button"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/phoneInputLayout"
+        app:layout_constraintTop_toBottomOf="@id/intervalInputLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         app:cornerRadius="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/startRepeatButton"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="@string/start_repeat"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/sendSmsButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/stopRepeatButton"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/green" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/stopRepeatButton"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="@string/stop_repeat"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/sendSmsButton"
+        app:layout_constraintStart_toEndOf="@id/startRepeatButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/red"
+        android:enabled="false" />
 
     <TextView
         android:id="@+id/statusText"
@@ -73,7 +126,7 @@
         android:text=""
         android:textSize="14sp"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/sendSmsButton"
+        app:layout_constraintTop_toBottomOf="@id/stopRepeatButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

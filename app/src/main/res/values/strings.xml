@@ -9,4 +9,11 @@
     <string name="invalid_phone">Por favor ingrese un número válido (9 dígitos)</string>
     <string name="title">Envío Automático de SMS</string>
     <string name="subtitle">Ingrese el número y presione enviar</string>
+    <string name="repeat_interval_hint">Intervalo de repetición (segundos)</string>
+    <string name="start_repeat">Iniciar Envío Repetido</string>
+    <string name="stop_repeat">Detener Envío Repetido</string>
+    <string name="repeat_active">🔄 Envío repetido activo - Próximo envío en %d segundos</string>
+    <string name="repeat_stopped">⏹ Envío repetido detenido</string>
+    <string name="invalid_interval">El intervalo debe ser de al menos 10 segundos</string>
+    <string name="repeat_count">SMS enviados: %d</string>
 </resources>
